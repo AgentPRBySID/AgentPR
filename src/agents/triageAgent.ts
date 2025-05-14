@@ -7,6 +7,8 @@ export const handlePullRequest = async (payload: any) => {
   const prNumber = payload.pull_request.number;
   const repo = payload.repository.name;
   const owner = payload.repository.owner.login;
+  const testLintCheck = true; // just a test line
+
 
   const risk = classifyRiskLevel(prTitle + ' ' + prBody);
 
