@@ -7,7 +7,8 @@ export const handlePullRequest = async (payload: any) => {
   const prNumber = payload.pull_request.number;
   const repo = payload.repository.name;
   const owner = payload.repository.owner.login;
-  const testLint = true; // temp line to trigger ESLint and PR diff
+  //const testLint = true; // temp line to trigger ESLint and PR diff
+  const debugInlineLint = 123;
 
 
 
