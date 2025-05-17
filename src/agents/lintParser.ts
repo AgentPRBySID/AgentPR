@@ -29,3 +29,4 @@ for (const result of results) {
     console.log('---');
   }
 }
+const dummy: any = 42;
