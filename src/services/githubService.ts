@@ -32,7 +32,16 @@ export const postPRLabel = async (
     console.log(`✅ Label "${label}" added to PR #${prNumber}`);
     return response.data;
   } catch (error: any) {
-    console.error('❌ Failed to add label:', error.response?.data || error.message);
+    console.error('❌ Failed to add label');
+    if (error.response) {
+      console.error('Status:', error.response.status);
+      console.error('Headers:', error.response.headers);
+      console.error('Data:', error.response.data);
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+    } else {
+      console.error('Error setting up request:', error.message);
+    }
     throw error;
   }
 };
