@@ -84,8 +84,8 @@ export async function runLintAgent(prPayload: any) {
 
     for (const result of results) {
       let relativePath = path.relative(repoRoot, result.filePath).replace(/\\/g, '/');
-      const match = relativePath.match(/AgentPR\/(src\/.+\.ts)$/);
-      const filePath = match ? match[1] : relativePath;
+      const filePath = relativePath.replace(/^.*?(src\/.+\.ts)$/, '$1');
+
 
       console.log('🧪 Normalized file path for GitHub:', filePath);
 
