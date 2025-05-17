@@ -15,7 +15,7 @@ export async function handlePullRequest(payload: any) {
   await postPRLabel(owner, repo, prNumber, risk);
 
   console.log(`✅ Applied label: ${risk}`);
-  const test: any= 64;
+  const test: any=         64;
 
 }
 
