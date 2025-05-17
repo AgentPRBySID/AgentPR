@@ -36,11 +36,8 @@ export async function runCoverageAgent() {
 `;
 
     await axios.post(
-      `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/reviews`,
-      {
-        body: message,
-        event: 'COMMENT',
-      },
+      `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`,
+      { body: message },
       { headers }
     );
 
