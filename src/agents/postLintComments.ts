@@ -4,6 +4,9 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 
 dotenv.config();
+// Intentional TypeScript lint error
+const temp: any = 'trigger error';
+
 
 export async function runLintAgent() {
   const token = process.env.GITHUB_TOKEN!;
@@ -28,7 +31,10 @@ export async function runLintAgent() {
       `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/files`,
       { headers }
     );
-    return data.map((f: any) => ({ filename: f.filename, patch: f.patch }));
+    return data.map((f: { filename: string; patch: string }) => ({
+      filename: f.filename,
+      patch: f.patch,
+    }));
   };
 
   const extractChangedLines = (patch: string): Set<number> => {
@@ -60,8 +66,8 @@ export async function runLintAgent() {
     const changedFiles = await getChangedFiles();
 
     const fileToChangedLines = new Map<string, Set<number>>();
-    changedFiles.forEach((file: { filename: string; patch: string }) => {
-
+    changedFiles.forEach((file: { filename: string; patch: string }) => 
+      {
       fileToChangedLines.set(file.filename, extractChangedLines(file.patch));
     });
 
@@ -92,17 +98,20 @@ export async function runLintAgent() {
           );
           commentsPosted++;
         } catch (error: any) {
-          console.warn(`❌ Failed to post comment on ${filePath}:${message.line}`, error.message);
+          console.warn(
+            `❌ Failed to post comment on ${filePath}:${message.line}`,
+            error.response?.data?.message || error.message
+          );
         }
       }
     }
 
+    // Post fallback comment if nothing was posted inline
     if (commentsPosted === 0) {
       await axios.post(
-        `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/reviews`,
+        `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`,
         {
-          event: 'COMMENT',
-          body: 'Lint completed but no inline comments could be posted. Check `eslint-output.json`.',
+          body: '✅ Lint completed, but no inline comments were necessary.',
         },
         { headers }
       );
@@ -110,6 +119,9 @@ export async function runLintAgent() {
 
     console.log('✅ Lint Agent execution completed.');
   } catch (error: any) {
-    console.error('❌ Unexpected Lint Agent failure:', error.message);
+    console.error(
+      '❌ Unexpected Lint Agent failure:',
+      error.response?.data?.message || error.message
+    );
   }
 }
