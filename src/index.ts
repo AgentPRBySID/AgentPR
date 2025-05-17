@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware to parse incoming JSON (required for GitHub payloads)
-app.use(express.json());
+app.use(express.json(({ limit: '5mb' })));
 
 // Route for handling GitHub webhooks
 app.use('/webhook', githubRoutes);
@@ -19,3 +19,4 @@ app.listen(PORT, () => {
 });
 
 
+// test trigger change
