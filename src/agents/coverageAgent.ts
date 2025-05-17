@@ -35,14 +35,15 @@ export async function runCoverageAgent() {
 - **Branches:** ${formatPercent(total.branches.pct)}
 `;
 
+    // Post a top-level comment on the PR (via issues API)
     await axios.post(
       `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`,
       { body: message },
       { headers }
     );
 
-    console.log('✅ Posted coverage comment to PR');
+    console.log('✅ Posted test coverage comment to PR');
   } catch (error: any) {
-    console.error('❌ Failed to post coverage comment:', error.response?.data || error.message);
+    console.error('❌ Failed to post test coverage comment:', error.response?.data || error.message);
   }
 }

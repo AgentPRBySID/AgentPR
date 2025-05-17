@@ -9,5 +9,5 @@
     "strict": true,
     "types": ["jest", "node"]
   },
-  "include": ["src", "__tests__"]
+  "include": ["src", "__tests__", "jest.config.js","dummy.ts"]
 }
