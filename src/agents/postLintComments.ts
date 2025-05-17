@@ -6,7 +6,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Intentional lint error to test
-const temp: any = 'trigger error';
+const temp: any = 'still testing inline comment';
+
 
 export async function runLintAgent() {
   const token = process.env.GITHUB_TOKEN!;
