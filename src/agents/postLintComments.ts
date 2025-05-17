@@ -75,7 +75,8 @@ export async function runLintAgent() {
     const changedFiles = await getChangedFiles();
 
     const fileToChangedLines = new Map<string, Set<number>>();
-    changedFiles.forEach((file) => {
+    changedFiles.forEach((file: { filename: string; patch: string }) =>
+      {
       fileToChangedLines.set(file.filename, extractChangedLines(file.patch));
     });
 
