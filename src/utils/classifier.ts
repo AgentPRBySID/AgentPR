@@ -8,7 +8,7 @@ export const classifyRiskLevel = (text: string): string => {
   
     if (
       lower.includes('docs') || lower.includes('readme') || lower.includes('changelog') ||
-      lower.includes('typo') || lower.includes('comment') || lower.includes('format')
+      lower.includes('typo') || lower.includes('comment') || lower.includes('format') || lower.includes('test')
     ) return 'low-risk';
   
     if (

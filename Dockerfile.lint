@@ -1,16 +1,10 @@
-# Dockerfile.lint
 FROM node:18
 
 WORKDIR /app
 
-# Copy project files
 COPY . .
 
-# Install dependencies
 RUN npm ci
-
-# Ensure TSX is installed for running .ts directly
 RUN npm install -D tsx
 
-# Run lint + comment in one go (you can split this later if needed)
-CMD npm run lint && npx tsx src/agents/postLintComments.ts
+CMD ["sh", "-c", "npx eslint . -f json -o eslint-output.json && npx tsx src/agents/postLintComments.ts"]
