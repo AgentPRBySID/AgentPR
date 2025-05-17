@@ -1,27 +1,32 @@
 import express from 'express';
 import { handlePullRequest } from '../agents/triageAgent';
+import { runLintAgent } from '../agents/postLintComments';
+import { runCoverageAgent } from '../agents/coverageAgent';
 
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  const event = req.headers['x-github-event'];
+  const event = req.header('X-GitHub-Event');
+  const action = req.body.action;
+  const payload = req.body;
 
-  console.log('📩 GitHub Event:', event);
-  console.log('🧠 Payload:', req.body);
-
-  if (event === 'pull_request') {
+  // Run only on PR open, reopen, or sync
+  if (event === 'pull_request' && ['opened', 'reopened', 'synchronize'].includes(action)) {
     try {
-      await handlePullRequest(req.body);
-      res.status(200).send('✅ PR event processed');
+      console.log(`🔁 GitHub PR event received: ${action}`);
+
+      await handlePullRequest(payload);  // Labeling
+      await runLintAgent();              // Linting + inline comments
+      await runCoverageAgent();          // ✅ Coverage report
+
+      res.status(200).send('✅ Agents executed successfully.');
     } catch (error) {
-      console.error('❌ Error in handlePullRequest:', error);
-      res.status(500).send('Error processing PR');
+      console.error('❌ Agent execution failed:', error);
+      res.status(500).send('Agent execution failed.');
     }
   } else {
-    res.status(200).send('Ignored non-PR event');
+    res.status(200).send('Ignored event.');
   }
 });
 
 export default router;
-
-

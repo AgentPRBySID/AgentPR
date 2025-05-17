@@ -5,77 +5,111 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const token = process.env.GITHUB_TOKEN!;
-const repoFull = process.env.GITHUB_REPO!;
-const [owner, repo] = repoFull.split('/');
-const prNumber = parseInt(process.env.PR_NUMBER!, 10);
+// Test lint error to trigger inline comment
+const temp: any = 'still testing inline comment';
+const x: any = 123;
 
-const headers = {
-  Authorization: `token ${token}`,
-  Accept: 'application/vnd.github+json',
-  'User-Agent': 'AgentPR-Bot',
-};
+export async function runLintAgent(prPayload: any) {
+  const token = process.env.GITHUB_TOKEN!;
+  if (!token) throw new Error('Missing GITHUB_TOKEN in environment variables.');
 
-const results = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../eslint-output.json'), 'utf-8'));
-const repoRoot = '/app';
+  const prNumber = prPayload.number;
+  const repo = prPayload.base.repo.name;
+  const owner = prPayload.base.repo.owner.login;
+  const head_sha = prPayload.head.sha;
 
-const getChangedFiles = async () => {
-  const { data } = await axios.get(
-    `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/files`,
-    { headers }
+  console.log('🔧 Debug: repo =', repo);
+  console.log('🔧 Debug: owner =', owner);
+  console.log('🔧 Debug: prNumber =', prNumber);
+  console.log('🔧 Debug: commit SHA =', head_sha);
+
+  const headers = {
+    Authorization: `token ${token}`,
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'AgentPR-Bot',
+  };
+
+  const results = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, '../../eslint-output.json'), 'utf-8')
   );
-  return data.map((f: any) => ({ filename: f.filename, patch: f.patch }));
-};
 
-const extractChangedLines = (patch: string): Set<number> => {
-  const changedLines = new Set<number>();
-  const lines = patch.split('\n');
-  let newLine = 0;
-  for (const line of lines) {
-    if (line.startsWith('@@')) {
-      const match = /@@ -\d+,\d+ \+(\d+),?(\d+)? @@/.exec(line);
-      if (match) newLine = parseInt(match[1], 10);
-      continue;
-    }
-    if (line.startsWith('+') && !line.startsWith('+++')) {
-      changedLines.add(newLine);
-      newLine++;
-    } else if (!line.startsWith('-')) {
-      newLine++;
-    }
-  }
-  return changedLines;
-};
+  const repoRoot = path.resolve(__dirname, '../../');
+  console.log('📁 Resolved repo root:', repoRoot);
 
-(async () => {
-  try {
-    const prRes = await axios.get(
-      `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}`,
+  const getChangedFiles = async () => {
+    const { data } = await axios.get(
+      `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/files`,
       { headers }
     );
-    const head_sha = prRes.data.head.sha;
+    console.log('🗂 PR changed files:');
+    data.forEach((f: any) => console.log('  •', f.filename));
+    return data
+  .filter((f: any) => f.patch) // 🛡️ filter out files without patch
+  .map((f: { filename: string; patch: string }) => ({
+    filename: f.filename,
+    patch: f.patch,
+  }));
+
+  };
+
+  const extractChangedLines = (patch: string): Set<number> => {
+    const changedLines = new Set<number>();
+    const lines = patch.split('\n');
+    let newLine = 0;
+    for (const line of lines) {
+      if (line.startsWith('@@')) {
+        const match = /@@ -\d+,\d+ \+(\d+),?(\d+)? @@/.exec(line);
+        if (match) newLine = parseInt(match[1], 10);
+        continue;
+      }
+      if (line.startsWith('+') && !line.startsWith('+++')) {
+        changedLines.add(newLine);
+        newLine++;
+      } else if (!line.startsWith('-')) {
+        newLine++;
+      }
+    }
+    return changedLines;
+  };
+
+  try {
     const changedFiles = await getChangedFiles();
 
     const fileToChangedLines = new Map<string, Set<number>>();
-    changedFiles.forEach((file) => {
+    changedFiles.forEach((file: { filename: string; patch: string }) => {
       fileToChangedLines.set(file.filename, extractChangedLines(file.patch));
     });
 
     let commentsPosted = 0;
 
     for (const result of results) {
-      const filePath = path.relative(repoRoot, result.filePath);
-      const changedLines = fileToChangedLines.get(filePath);
-      if (!changedLines) continue;
+      let relativePath = path.relative(repoRoot, result.filePath).replace(/\\/g, '/');
+      const match = relativePath.match(/AgentPR\/(src\/.+\.ts)$/);
+      const filePath = match ? match[1] : relativePath;
+
+      console.log('🧪 Normalized file path for GitHub:', filePath);
+
+      if (!fileToChangedLines.has(filePath)) {
+        console.log('🚫 Skipping file not in PR diff:', filePath);
+        continue;
+      }
+
+      const changedLines = fileToChangedLines.get(filePath)!;
 
       for (const message of result.messages) {
-        if (!changedLines.has(message.line)) continue;
+        if (!changedLines.has(message.line)) {
+          console.log(`🔕 Skipping unchanged line ${message.line}`);
+          continue;
+        }
 
         const commentBody = `Error: ${message.message}\nRule: \`${message.ruleId || 'n/a'}\``;
 
         try {
+          const postUrl = `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/comments`;
+          console.log(`📤 Inline comment to ${filePath}:${message.line}`);
+
           await axios.post(
-            `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/comments`,
+            postUrl,
             {
               body: commentBody,
               commit_id: head_sha,
@@ -86,19 +120,29 @@ const extractChangedLines = (patch: string): Set<number> => {
             { headers }
           );
           commentsPosted++;
-        } catch {}
+        } catch (error: any) {
+          console.warn(
+            `❌ Failed to comment on ${filePath}:${message.line}`,
+            error.response?.data?.message || error.message
+          );
+        }
       }
     }
 
     if (commentsPosted === 0) {
+      const fallbackUrl = `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`;
+      console.log(`📤 Fallback comment to ${fallbackUrl}`);
       await axios.post(
-        `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/reviews`,
+        fallbackUrl,
         {
-          event: 'COMMENT',
-          body: `Lint completed but no inline comments could be posted. Check \`eslint-output.json\`.`,
+          body: '✅ Lint completed, but no inline comments were necessary.',
         },
         { headers }
       );
     }
-  } catch {}
-})();
+
+    console.log('✅ Lint Agent finished.');
+  } catch (error: any) {
+    console.error('❌ Lint Agent error:', error.response?.data?.message || error.message);
+  }
+}
