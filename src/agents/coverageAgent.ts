@@ -5,16 +5,16 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export async function runCoverageAgent() {
+export async function runCoverageAgent(prPayload: any) {
   try {
     const token = process.env.GITHUB_TOKEN!;
-    const repoFull = process.env.GITHUB_REPO!;
-    const [owner, repo] = repoFull.split('/');
-    const prNumber = parseInt(process.env.PR_NUMBER!, 10);
+    if (!token) throw new Error('Missing GITHUB_TOKEN in environment variables.');
 
-    console.log('🔧 GITHUB_TOKEN:', token ? 'Present' : 'Missing');
-    console.log('🔧 GITHUB_REPO:', repoFull);
-    console.log('🔧 PR_NUMBER:', prNumber);
+    const prNumber = prPayload.number;
+    const owner = prPayload.base.repo.owner.login;
+    const repo = prPayload.base.repo.name;
+
+    console.log('🔧 PR Info:', `${owner}/${repo} #${prNumber}`);
 
     const headers = {
       Authorization: `token ${token}`,
@@ -44,17 +44,10 @@ export async function runCoverageAgent() {
 - **Branches:** ${formatPercent(total.branches.pct)}
 `;
 
-    console.log('🧠 Comment Message Prepared:\n', message);
-
-    // Sanity check PR existence
-    const prCheck = await axios.get(
-      `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}`,
-      { headers }
-    );
-    console.log('✅ PR exists, PR title:', prCheck.data.title);
+    console.log('🧠 Comment message prepared:\n', message);
 
     const commentUrl = `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`;
-    console.log('📤 Posting comment to:', commentUrl);
+    console.log('📤 Posting coverage comment to:', commentUrl);
 
     const response = await axios.post(
       commentUrl,
@@ -62,13 +55,13 @@ export async function runCoverageAgent() {
       { headers }
     );
 
-    console.log('✅ Coverage comment posted successfully. Comment ID:', response.data.id);
+    console.log('✅ Coverage comment posted. ID:', response.data.id);
   } catch (error: any) {
-    console.error('❌ Failed to post test coverage comment.');
+    console.error('❌ Coverage Agent failed.');
     if (error.response) {
       console.error('Status:', error.response.status);
       console.error('URL:', error.config?.url);
-      console.error('Response data:', JSON.stringify(error.response.data, null, 2));
+      console.error('Response:', JSON.stringify(error.response.data, null, 2));
     } else {
       console.error('Error:', error.message);
     }

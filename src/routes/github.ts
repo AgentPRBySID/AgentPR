@@ -16,8 +16,9 @@ router.post('/', async (req, res) => {
       console.log(`🔁 GitHub PR event received: ${action}`);
 
       await handlePullRequest(payload);  // Labeling
-      await runLintAgent();              // Linting + inline comments
-      await runCoverageAgent();          // ✅ Coverage report
+      await runLintAgent(payload.pull_request);              // Linting + inline comments
+      await runCoverageAgent(payload.pull_request); // ✅ Pass the PR payload
+// ✅ Coverage report
 
       res.status(200).send('✅ Agents executed successfully.');
     } catch (error) {
