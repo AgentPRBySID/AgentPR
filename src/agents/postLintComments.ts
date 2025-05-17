@@ -5,19 +5,23 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Intentional lint error to test
+// Test lint error to trigger inline comment
 const temp: any = 'still testing inline comment';
+const x: any = 123;
 
-
-export async function runLintAgent() {
+export async function runLintAgent(prPayload: any) {
   const token = process.env.GITHUB_TOKEN!;
-  const repoFull = process.env.GITHUB_REPO!;
-  const [owner, repo] = repoFull.split('/');
-  const prNumber = parseInt(process.env.PR_NUMBER!, 10);
+  if (!token) throw new Error('Missing GITHUB_TOKEN in environment variables.');
+
+  const prNumber = prPayload.number;
+  const repo = prPayload.base.repo.name;
+  const owner = prPayload.base.repo.owner.login;
+  const head_sha = prPayload.head.sha;
 
   console.log('🔧 Debug: repo =', repo);
   console.log('🔧 Debug: owner =', owner);
   console.log('🔧 Debug: prNumber =', prNumber);
+  console.log('🔧 Debug: commit SHA =', head_sha);
 
   const headers = {
     Authorization: `token ${token}`,
@@ -39,10 +43,13 @@ export async function runLintAgent() {
     );
     console.log('🗂 PR changed files:');
     data.forEach((f: any) => console.log('  •', f.filename));
-    return data.map((f: { filename: string; patch: string }) => ({
-      filename: f.filename,
-      patch: f.patch,
-    }));
+    return data
+  .filter((f: any) => f.patch) // 🛡️ filter out files without patch
+  .map((f: { filename: string; patch: string }) => ({
+    filename: f.filename,
+    patch: f.patch,
+  }));
+
   };
 
   const extractChangedLines = (patch: string): Set<number> => {
@@ -66,18 +73,10 @@ export async function runLintAgent() {
   };
 
   try {
-    const prRes = await axios.get(
-      `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}`,
-      { headers }
-    );
-    const head_sha = prRes.data.head.sha;
-    console.log('🔧 Debug: commit SHA =', head_sha);
-
     const changedFiles = await getChangedFiles();
 
     const fileToChangedLines = new Map<string, Set<number>>();
-    changedFiles.forEach((file: { filename: string; patch: string }) =>
-      {
+    changedFiles.forEach((file: { filename: string; patch: string }) => {
       fileToChangedLines.set(file.filename, extractChangedLines(file.patch));
     });
 
@@ -85,10 +84,9 @@ export async function runLintAgent() {
 
     for (const result of results) {
       let relativePath = path.relative(repoRoot, result.filePath).replace(/\\/g, '/');
-
-      // Normalize path to match GitHub PR diff format exactly
       const match = relativePath.match(/AgentPR\/(src\/.+\.ts)$/);
       const filePath = match ? match[1] : relativePath;
+
       console.log('🧪 Normalized file path for GitHub:', filePath);
 
       if (!fileToChangedLines.has(filePath)) {
@@ -145,9 +143,6 @@ export async function runLintAgent() {
 
     console.log('✅ Lint Agent finished.');
   } catch (error: any) {
-    console.error(
-      '❌ Lint Agent error:',
-      error.response?.data?.message || error.message
-    );
+    console.error('❌ Lint Agent error:', error.response?.data?.message || error.message);
   }
 }
