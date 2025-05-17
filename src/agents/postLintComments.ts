@@ -4,9 +4,9 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 
 dotenv.config();
-// Intentional TypeScript lint error
-const temp: any = 'trigger error';
 
+// Intentional TypeScript lint error to test
+const temp: any = 'trigger error';
 
 export async function runLintAgent() {
   const token = process.env.GITHUB_TOKEN!;
@@ -66,8 +66,7 @@ export async function runLintAgent() {
     const changedFiles = await getChangedFiles();
 
     const fileToChangedLines = new Map<string, Set<number>>();
-    changedFiles.forEach((file: { filename: string; patch: string }) => 
-      {
+    changedFiles.forEach((file: { filename: string; patch: string }) => {
       fileToChangedLines.set(file.filename, extractChangedLines(file.patch));
     });
 
@@ -106,7 +105,7 @@ export async function runLintAgent() {
       }
     }
 
-    // Post fallback comment if nothing was posted inline
+    // ✅ CORRECT fallback: general PR-level comment
     if (commentsPosted === 0) {
       await axios.post(
         `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`,
