@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import pool from '../utils/db';
+
 
 dotenv.config();
 
@@ -31,18 +33,41 @@ export async function runCoverageAgent(prPayload: any) {
 
     console.log('📊 Parsed Coverage:', total);
 
+    // 🗄️ Store coverage in Postgres
+    await pool.query(
+      `INSERT INTO coverage_history (pr_number, branch, lines, statements, functions, branches)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (pr_number) DO UPDATE SET
+         lines = EXCLUDED.lines,
+         statements = EXCLUDED.statements,
+         functions = EXCLUDED.functions,
+         branches = EXCLUDED.branches,
+         created_at = CURRENT_TIMESTAMP`,
+      [
+        prNumber,
+        prPayload.head.ref, // branch name
+        total.lines.pct,
+        total.statements.pct,
+        total.functions.pct,
+        total.branches.pct
+      ]
+    );
+    
+    console.log('✅ Coverage stored in PostgreSQL');
+    
     const formatPercent = (value: unknown) => {
       const num = typeof value === 'number' ? value : 0;
       return `${num.toFixed(2)}%`;
     };
-
+    
     const message = `
-📊 **Test Coverage Report**
-- **Lines:** ${formatPercent(total.lines.pct)}
-- **Statements:** ${formatPercent(total.statements.pct)}
-- **Functions:** ${formatPercent(total.functions.pct)}
-- **Branches:** ${formatPercent(total.branches.pct)}
-`;
+    📊 **Test Coverage Report**
+    - **Lines:** ${formatPercent(total.lines.pct)}
+    - **Statements:** ${formatPercent(total.statements.pct)}
+    - **Functions:** ${formatPercent(total.functions.pct)}
+    - **Branches:** ${formatPercent(total.branches.pct)}
+    `;
+    
 
     console.log('🧠 Comment message prepared:\n', message);
 
