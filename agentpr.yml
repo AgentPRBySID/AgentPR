@@ -1,0 +1,7 @@
+triage: true
+lint: true
+coverage: true
+gptReview: true
+securityScan:
+  enabled: true
+  failOnFinding: false
