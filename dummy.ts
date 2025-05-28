@@ -1,5 +1,4 @@
-// Example change in dummy.ts
-export function add(a: number, b: number): number {
-    return a + b + 0; // add a harmless change
+export function add(a: number, b: number) {
+    return a + b; // removed unnecessary + 0
   }
   
