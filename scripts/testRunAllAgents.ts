@@ -34,19 +34,35 @@ async function main() {
   const name = prPayload.base.repo.name;
   const config = await loadAgentConfig(owner, name);
 
-  if (config.triage) await runTriageAgent(prPayload);
-  if (config.lint) await runLintAgent(prPayload);
-  if (config.coverage) await runCoverageAgent(prPayload);
+  if (config.triage) {
+    console.log("➡️ Running Triage Agent");
+    await runTriageAgent(prPayload);
+  }
+
+  if (config.lint) {
+    console.log("➡️ Running Lint Agent");
+    await runLintAgent(prPayload);
+  }
+
+  if (config.coverage) {
+    console.log("➡️ Running Coverage Agent");
+    await runCoverageAgent(prPayload);
+  }
+
   console.log('🧪 Loaded config:', config);
 
   if (config.gptReview) {
-    console.log('✅ GPT Review Enabled:', config.gptReview);
+    console.log('✅ GPT Review Enabled');
     await runCodeReviewAgent(prPayload);
   }
 
-  if (config.securityScan.enabled){
+  if (config.securityScan.enabled) {
     console.log("🔐 Starting Semgrep scan...");
-     await runSecurityScanAgent(prPayload);
+    await runSecurityScanAgent(prPayload);
+  }
 }
 
-main();}
+// ✅ Top-level entry point
+main().catch((err) => {
+  console.error('❌ Uncaught error in main():', err);
+});
