@@ -3,13 +3,11 @@
 // 🤖 trigger lint & gpt
 // test trigger for GPT Review
 
+// test for GPT review
+const unusedVar: any = 42;
 
-const unused = 35; // trigger no-unused-vars
-const unusedVar = 123; // just testing
-
-
-function testFunc() {
+function testDeadBranch() {
   if (false) {
-    console.log('dead branch'); // trigger GPT suggestion
+    console.log("This should never run");
   }
 }
