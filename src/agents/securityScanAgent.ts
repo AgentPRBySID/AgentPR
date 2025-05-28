@@ -17,7 +17,7 @@ export async function runSecurityScanAgent(prPayload: any) {
 
     const outputPath = path.resolve(__dirname, '../../semgrep-output.json');
     try {
-        execSync(`npx semgrep --config p/owasp-top-ten --json > ${outputPath}`, { stdio: 'inherit' });
+        execSync(`semgrep --config p/owasp-top-ten --json > ${outputPath}`, { stdio: 'inherit' });
       }  catch (e) {
         if (e instanceof Error) {
           console.error('❌ Semgrep execution failed:', e.message);
