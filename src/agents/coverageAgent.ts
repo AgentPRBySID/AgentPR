@@ -42,7 +42,7 @@ export async function runCoverageAgent(prPayload: any) {
            functions_covered, functions_total,
            branches_covered, branches_total
          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-         ON CONFLICT (pr_number) DO UPDATE SET
+         ON CONFLICT (pr_number, branch) DO UPDATE SET
            lines_covered = EXCLUDED.lines_covered,
            lines_total = EXCLUDED.lines_total,
            statements_covered = EXCLUDED.statements_covered,
