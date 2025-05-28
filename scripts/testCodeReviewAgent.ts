@@ -7,11 +7,11 @@ const fakePayload = {
   base: {
     repo: {
       name: 'AgentPR',
-      owner: { login: 'sreebhargav' }, // ✅ Your GitHub username
+      owner: { login: 'sreebhargav' }, //  Your GitHub username
     },
   },
   head: {
-    ref: 'feature/code-review-agent-test', // ✅ The name of the branch from your PR
+    ref: 'feature/code-review-agent-test', //  The name of the branch from your PR
   },
 };
 
