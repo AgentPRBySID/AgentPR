@@ -44,7 +44,9 @@ async function main() {
     await runCodeReviewAgent(prPayload);
   }
 
-  if (config.securityScan.enabled) await runSecurityScanAgent(prPayload);
+  if (config.securityScan.enabled){
+    console.log("🔐 Starting Semgrep scan...");
+     await runSecurityScanAgent(prPayload);
 }
 
-main();
+main();}

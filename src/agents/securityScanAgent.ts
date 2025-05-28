@@ -16,7 +16,18 @@ export async function runSecurityScanAgent(prPayload: any) {
     console.log('🔐 Running Semgrep scan...');
 
     const outputPath = path.resolve(__dirname, '../../semgrep-output.json');
-    execSync(`semgrep --config p/owasp-top-ten --json > ${outputPath}`);
+    try {
+        execSync(`npx semgrep --config p/owasp-top-ten --json > ${outputPath}`, { stdio: 'inherit' });
+      }  catch (e) {
+        if (e instanceof Error) {
+          console.error('❌ Semgrep execution failed:', e.message);
+        } else {
+          console.error('❌ Semgrep execution failed with unknown error:', e);
+        }
+        return;
+      }
+    
+      
 
     const raw = fs.readFileSync(outputPath, 'utf-8');
     const report = JSON.parse(raw);
