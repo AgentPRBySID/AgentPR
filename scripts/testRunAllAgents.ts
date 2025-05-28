@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import { loadAgentConfig } from '../src/utils/loadAgentConfig';
 import { runTriageAgent } from '../src/agents/triageAgent';
 import { runCoverageAgent } from '../src/agents/coverageAgent';
@@ -5,49 +7,43 @@ import { runCodeReviewAgent } from '../src/agents/codeReviewAgent';
 import { runSecurityScanAgent } from '../src/agents/securityScanAgent';
 import { runLintAgent } from '../src/agents/lintAgent';
 
- // hypothetical combined function
+async function main() {
+  const eventPath = process.env.GITHUB_EVENT_PATH;
+  if (!eventPath) {
+    throw new Error('GITHUB_EVENT_PATH not defined');
+  }
 
- const prPayload = {
-    number: 23,
-    base: {
-      repo: {
-        name: 'AgentPR',
-        owner: { login: 'sreebhargav' }
-      }
-    },
-    head: {
-      sha: 'eeab549f536c25958cf7b94acdb6de53bd550d66'
-    },
+  const eventData = JSON.parse(fs.readFileSync(eventPath, 'utf8'));
+
+  const prPayload = {
+    number: eventData.number,
+    base: eventData.pull_request?.base,
+    head: eventData.pull_request?.head,
     pull_request: {
-      number: 23,
-      title: 'feat: triage agent',
-      body: 'This PR adds risk classification and label support.'
+      number: eventData.pull_request?.number,
+      title: eventData.pull_request?.title,
+      body: eventData.pull_request?.body
     },
     repository: {
-      name: 'AgentPR',
-      owner: { login: 'sreebhargav' }
+      name: eventData.repository?.name,
+      owner: { login: eventData.repository?.owner?.login }
     }
   };
-  
-  
 
-async function main() {
-    const owner = prPayload.base.repo.owner.login;
-    const name = prPayload.base.repo.name;
-    const config = await loadAgentConfig(owner, name);
-    
+  const owner = prPayload.base.repo.owner.login;
+  const name = prPayload.base.repo.name;
+  const config = await loadAgentConfig(owner, name);
 
   if (config.triage) await runTriageAgent(prPayload);
-  if (config.lint) await runLintAgent(prPayload); // combines parser + comment
+  if (config.lint) await runLintAgent(prPayload);
   if (config.coverage) await runCoverageAgent(prPayload);
   console.log('🧪 Loaded config:', config);
-  
-  
+
   if (config.gptReview) {
     console.log('✅ GPT Review Enabled:', config.gptReview);
     await runCodeReviewAgent(prPayload);
   }
-  
+
   if (config.securityScan.enabled) await runSecurityScanAgent(prPayload);
 }
 
