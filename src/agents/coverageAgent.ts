@@ -35,23 +35,37 @@ export async function runCoverageAgent(prPayload: any) {
 
     // 🗄️ Store coverage in Postgres
     await pool.query(
-      `INSERT INTO coverage_history (pr_number, branch, lines, statements, functions, branches)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       ON CONFLICT (pr_number) DO UPDATE SET
-         lines = EXCLUDED.lines,
-         statements = EXCLUDED.statements,
-         functions = EXCLUDED.functions,
-         branches = EXCLUDED.branches,
-         created_at = CURRENT_TIMESTAMP`,
-      [
-        prNumber,
-        prPayload.head.ref, // branch name
-        total.lines.pct,
-        total.statements.pct,
-        total.functions.pct,
-        total.branches.pct
-      ]
-    );
+        `INSERT INTO coverage_history (
+           pr_number, branch,
+           lines_covered, lines_total,
+           statements_covered, statements_total,
+           functions_covered, functions_total,
+           branches_covered, branches_total
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         ON CONFLICT (pr_number) DO UPDATE SET
+           lines_covered = EXCLUDED.lines_covered,
+           lines_total = EXCLUDED.lines_total,
+           statements_covered = EXCLUDED.statements_covered,
+           statements_total = EXCLUDED.statements_total,
+           functions_covered = EXCLUDED.functions_covered,
+           functions_total = EXCLUDED.functions_total,
+           branches_covered = EXCLUDED.branches_covered,
+           branches_total = EXCLUDED.branches_total,
+           created_at = CURRENT_TIMESTAMP`,
+        [
+          prNumber,
+          prPayload.head.ref,
+          total.lines.covered,
+          total.lines.total,
+          total.statements.covered,
+          total.statements.total,
+          total.functions.covered,
+          total.functions.total,
+          total.branches.covered,
+          total.branches.total
+        ]
+      );
+      
     
     console.log('✅ Coverage stored in PostgreSQL');
     
