@@ -54,24 +54,26 @@ jobs:
       - name: 🛠️ Create coverage_history table
         run: |
           until pg_isready -h localhost -U $PGUSER; do
-            echo "Waiting for PostgreSQL to be ready..."; sleep 2;
+          echo "Waiting for PostgreSQL to be ready..."; sleep 2;
           done
           psql -h localhost -U $PGUSER -d $PGDATABASE -c "
-            CREATE TABLE IF NOT EXISTS coverage_history (
-              id SERIAL PRIMARY KEY,
-              pr_number INT NOT NULL,
-              branch TEXT,
-              lines_covered INT,
-              lines_total INT,
-              statements_covered INT,
-              statements_total INT,
-              functions_covered INT,
-              functions_total INT,
-              branches_covered INT,
-              branches_total INT,
-              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+          CREATE TABLE IF NOT EXISTS coverage_history (
+            id SERIAL PRIMARY KEY,
+            pr_number INT NOT NULL,
+            branch TEXT NOT NULL,
+            lines_covered INT,
+            lines_total INT,
+            statements_covered INT,
+            statements_total INT,
+            functions_covered INT,
+            functions_total INT,
+            branches_covered INT,
+            branches_total INT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (pr_number, branch)
+          );
           "
+
 
 
       - name: 🔐 Run All Agents
