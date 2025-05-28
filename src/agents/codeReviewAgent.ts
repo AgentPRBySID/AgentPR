@@ -8,7 +8,9 @@ export async function runCodeReviewAgent(prPayload: any) {
     const token = process.env.GITHUB_TOKEN!;
     const openaiKey = process.env.OPENAI_API_KEY!;
     if (!token || !openaiKey) throw new Error('Missing GITHUB_TOKEN or OPENAI_API_KEY.');
-
+    console.log('🧠 GPT Review Agent triggered');
+    console.log('🔑 OPENAI_API_KEY loaded:', openaiKey?.length);
+    
     const prNumber = prPayload.number;
     const owner = prPayload.base.repo.owner.login;
     const repo = prPayload.base.repo.name;
@@ -48,11 +50,13 @@ Below are the diff patches for the modified files. Give feedback as bullet point
 ${truncated}
 `;
 
+console.log('📡 Sending request to OpenAI...');
+
     // Step 3: Call OpenAI GPT-4
     const gptResponse = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.4,
       },
@@ -62,6 +66,8 @@ ${truncated}
         },
       }
     );
+    console.log('🧠 GPT-4 Response:', JSON.stringify(gptResponse.data, null, 2));
+
 
     const feedback = gptResponse.data.choices[0].message.content;
     console.log('💬 GPT-4 Feedback:\n', feedback);

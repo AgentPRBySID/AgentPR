@@ -32,13 +32,22 @@ import { runLintAgent } from '../src/agents/lintAgent';
   
 
 async function main() {
-  const { owner, name } = prPayload.base.repo;
-  const config = await loadAgentConfig(owner.login, name);
+    const owner = prPayload.base.repo.owner.login;
+    const name = prPayload.base.repo.name;
+    const config = await loadAgentConfig(owner, name);
+    
 
   if (config.triage) await runTriageAgent(prPayload);
   if (config.lint) await runLintAgent(prPayload); // combines parser + comment
   if (config.coverage) await runCoverageAgent(prPayload);
-  if (config.gptReview) await runCodeReviewAgent(prPayload);
+  console.log('🧪 Loaded config:', config);
+  
+  
+  if (config.gptReview) {
+    console.log('✅ GPT Review Enabled:', config.gptReview);
+    await runCodeReviewAgent(prPayload);
+  }
+  
   if (config.securityScan.enabled) await runSecurityScanAgent(prPayload);
 }
 
