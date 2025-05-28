@@ -15,36 +15,44 @@ export async function runCodeReviewAgent(prPayload: any) {
 
     console.log(`📦 Running Code Review Agent on ${owner}/${repo} PR #${prNumber}`);
 
-    // Step 1: Fetch PR diff
-    const diffUrl = `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}`;
-    const { data: diffText } = await axios.get(diffUrl, {
+    // Step 1: Use GitHub's safer /files API to get limited diffs
+    const filesUrl = `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/files`;
+    const filesRes = await axios.get(filesUrl, {
       headers: {
         Authorization: `token ${token}`,
-        Accept: 'application/vnd.github.v3.diff',
+        Accept: 'application/vnd.github+json',
         'User-Agent': 'AgentPR-Bot',
       },
     });
 
-    console.log('🧾 Diff fetched. Sending to GPT-4...');
+    const patches = filesRes.data
+      .filter((f: any) => f.patch)
+      .map((f: any) => `### ${f.filename}\n${f.patch}`)
+      .join('\n\n');
+
+    const truncated = patches.length > 12000
+      ? patches.slice(0, 12000) + '\n\n... [truncated]'
+      : patches;
+
+    console.log('🧾 Using combined patches for GPT-4 prompt.');
 
     // Step 2: Build GPT-4 prompt
     const prompt = `
 You are a senior software engineer reviewing a GitHub pull request.
 
-Below is the diff. Give feedback as bullet points:
-- Flag logic bugs, complexity, or code smells.
-- Suggest best practices or simplifications.
-- Focus on clarity, structure, and maintainability.
+Below are the diff patches for the modified files. Give feedback as bullet points:
+- Spot logic bugs, risks, or code smells
+- Recommend improvements in structure, clarity, or performance
+- Be concise and constructive
 
-Respond with just the feedback. Here's the diff:
-${diffText}
-    `;
+${truncated}
+`;
 
-    // Step 3: Call OpenAI
+    // Step 3: Call OpenAI GPT-4
     const gptResponse = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-4',
+        model: 'gpt-3.5-turbo',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.4,
       },
@@ -58,18 +66,22 @@ ${diffText}
     const feedback = gptResponse.data.choices[0].message.content;
     console.log('💬 GPT-4 Feedback:\n', feedback);
 
-    // Step 4: Post feedback to GitHub
+    // Step 4: Post feedback as PR comment
     const commentUrl = `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`;
     await axios.post(
       commentUrl,
       {
         body: `🤖 **Automated Code Review Suggestions**\n\n${feedback}`,
       },
-      { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github+json' } }
+      {
+        headers: {
+          Authorization: `token ${token}`,
+          Accept: 'application/vnd.github+json',
+        },
+      }
     );
 
     console.log('✅ Code review comment posted to GitHub.');
-
   } catch (err: any) {
     console.error('❌ Code Review Agent failed.');
     if (err.response) {

@@ -4,7 +4,7 @@ import { postPRLabel } from '../services/githubService';
 /**
  * Triage Agent: classifies PRs based on title/body and applies risk label
  */
-export async function handlePullRequest(payload: any) {
+export async function runTriageAgent(payload: any) {
   const prTitle = payload.pull_request.title;
   const prBody = payload.pull_request.body || '';
   const prNumber = payload.pull_request.number;

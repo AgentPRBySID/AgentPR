@@ -1,6 +1,6 @@
 import express from 'express';
-import { handlePullRequest } from '../agents/triageAgent';
-import { runLintAgent } from '../agents/postLintComments';
+import { runTriageAgent } from '../agents/triageAgent';
+import { runLintAgent } from '../agents/lintAgent';
 import { runCoverageAgent } from '../agents/coverageAgent';
 
 const router = express.Router();
@@ -15,10 +15,9 @@ router.post('/', async (req, res) => {
     try {
       console.log(`🔁 GitHub PR event received: ${action}`);
 
-      await handlePullRequest(payload);  // Labeling
+      await runTriageAgent(payload);  // Labeling
       await runLintAgent(payload.pull_request);              // Linting + inline comments
       await runCoverageAgent(payload.pull_request); // ✅ Pass the PR payload
-// ✅ Coverage report
 
       res.status(200).send('✅ Agents executed successfully.');
     } catch (error) {

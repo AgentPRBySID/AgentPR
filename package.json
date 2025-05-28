@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/express": "^5.0.1",
     "@types/jest": "^29.5.14",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.15.17",
     "@types/pg": "^8.15.2",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
