@@ -12,9 +12,29 @@ permissions:
 jobs:
   run-agents:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: agentpr
+          POSTGRES_USER: agentpr_user
+          POSTGRES_PASSWORD: password
+        options: >-
+          --health-cmd="pg_isready -U agentpr_user"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      PGHOST: localhost
+      PGUSER: agentpr_user
+      PGPASSWORD: password
+      PGDATABASE: agentpr
+      PGPORT: 5432
 
     steps:
       - name: ⬇️ Checkout repository
@@ -33,4 +53,5 @@ jobs:
 
       - name: 🧠 Run All Agents
         run: npx ts-node scripts/testRunAllAgents.ts
+
 
