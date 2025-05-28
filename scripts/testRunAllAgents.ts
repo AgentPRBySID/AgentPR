@@ -16,7 +16,7 @@ import { runLintAgent } from '../src/agents/lintAgent';
       }
     },
     head: {
-      sha: 'your-latest-pr-commit-sha'
+      sha: 'eeab549f536c25958cf7b94acdb6de53bd550d66'
     },
     pull_request: {
       number: 23,
