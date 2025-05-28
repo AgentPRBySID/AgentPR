@@ -51,7 +51,8 @@ jobs:
       - name: 🛡️ Install Semgrep
         run: pip install semgrep
 
-      - name: 🧠 Run All Agents
-        run: npx ts-node scripts/testRunAllAgents.ts
+      - name: 🔐 Run All Agents
+        run: semgrep --config p/owasp-top-ten --json > semgrep-output.json && npx ts-node scripts/testRunAllAgents.ts
+
 
 
