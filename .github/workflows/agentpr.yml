@@ -60,6 +60,7 @@ jobs:
             CREATE TABLE IF NOT EXISTS coverage_history (
               id SERIAL PRIMARY KEY,
               pr_number INT NOT NULL,
+              branch TEXT,
               lines_covered INT,
               lines_total INT,
               statements_covered INT,
