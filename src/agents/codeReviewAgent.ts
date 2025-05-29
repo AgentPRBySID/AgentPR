@@ -8,16 +8,16 @@ export async function runCodeReviewAgent(prPayload: any) {
     const token = process.env.GITHUB_TOKEN!;
     const openaiKey = process.env.OPENAI_API_KEY!;
     if (!token || !openaiKey) throw new Error('Missing GITHUB_TOKEN or OPENAI_API_KEY.');
-    console.log('🧠 GPT Review Agent triggered');
-    console.log('🔑 OPENAI_API_KEY loaded:', openaiKey?.length);
+    console.log(' GPT Review Agent triggered');
+    console.log(' OPENAI_API_KEY loaded:', openaiKey?.length);
     
     const prNumber = prPayload.number;
     const owner = prPayload.base.repo.owner.login;
     const repo = prPayload.base.repo.name;
 
-    console.log(`📦 Running Code Review Agent on ${owner}/${repo} PR #${prNumber}`);
+    console.log(` Running Code Review Agent on ${owner}/${repo} PR #${prNumber}`);
 
-    // Step 1: Use GitHub's safer /files API to get limited diffs
+    // GitHub's safer /files API to get limited diffs
     const filesUrl = `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/files`;
     const filesRes = await axios.get(filesUrl, {
       headers: {
@@ -36,9 +36,9 @@ export async function runCodeReviewAgent(prPayload: any) {
       ? patches.slice(0, 12000) + '\n\n... [truncated]'
       : patches;
 
-    console.log('🧾 Using combined patches for GPT-4 prompt.');
+    console.log(' Using combined patches for GPT-4 prompt.');
 
-    // Step 2: Build GPT-4 prompt
+    //  GPT-4 prompt
     const prompt = `
 You are a senior software engineer reviewing a GitHub pull request.
 
@@ -50,7 +50,7 @@ Below are the diff patches for the modified files. Give feedback as bullet point
 ${truncated}
 `;
 
-console.log('📡 Sending request to OpenAI...');
+console.log(' Sending request to OpenAI...');
 
     // Step 3: Call OpenAI GPT-4
     const gptResponse = await axios.post(
@@ -66,18 +66,18 @@ console.log('📡 Sending request to OpenAI...');
         },
       }
     );
-    console.log('🧠 GPT-4 Response:', JSON.stringify(gptResponse.data, null, 2));
+    console.log(' GPT-4 Response:', JSON.stringify(gptResponse.data, null, 2));
 
 
     const feedback = gptResponse.data.choices[0].message.content;
-    console.log('💬 GPT-4 Feedback:\n', feedback);
+    console.log(' GPT-4 Feedback:\n', feedback);
 
     // Step 4: Post feedback as PR comment
     const commentUrl = `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`;
     await axios.post(
       commentUrl,
       {
-        body: `🤖 **Automated Code Review Suggestions**\n\n${feedback}`,
+        body: ` **Automated Code Review Suggestions**\n\n${feedback}`,
       },
       {
         headers: {
@@ -87,9 +87,9 @@ console.log('📡 Sending request to OpenAI...');
       }
     );
 
-    console.log('✅ Code review comment posted to GitHub.');
+    console.log(' Code review comment posted to GitHub.');
   } catch (err: any) {
-    console.error('❌ Code Review Agent failed.');
+    console.error(' Code Review Agent failed.');
     if (err.response) {
       console.error('Status:', err.response.status);
       console.error('Message:', JSON.stringify(err.response.data, null, 2));
