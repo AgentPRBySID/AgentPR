@@ -40,10 +40,10 @@ export async function loadAgentConfig(owner: string, repo: string, branch = 'mai
 
     const configYaml = res.data;
     const parsed = yaml.load(configYaml) as AgentConfig;
-    console.log('✅ Loaded agentpr.yml config:', parsed);
+    console.log(' Loaded agentpr.yml config:', parsed);
     return { ...defaultConfig, ...parsed };
   } catch (err) {
-    console.warn('⚠️ Failed to load agentpr.yml, using default config.');
+    console.warn(' Failed to load agentpr.yml, using default config.');
     return defaultConfig;
   }
 }
