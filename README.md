@@ -1,4 +1,5 @@
 # AgentPR: AI-Powered Pull Request Automation
+![Docker Pulls](https://img.shields.io/docker/pulls/sreebhargav9999/agentpr?style=flat-square)
 
 AgentPR is an intelligent DevTool that automates code review, linting, test coverage analysis, and security scanning across GitHub pull requests. It's built for engineering teams that want to scale quality assurance and reduce manual code review overhead.
 
@@ -42,6 +43,11 @@ cp .env.example .env  # Fill with your GitHub token, DB creds, OpenAI key
 
 ```bash
 docker-compose up --build
+```
+Or run manually:
+
+```bash
+docker run --rm --env-file .env -v $(pwd):/app sreebhargav9999/agentpr:v4
 ```
 
 ### ☁️ SaaS/Cloud Hosting
