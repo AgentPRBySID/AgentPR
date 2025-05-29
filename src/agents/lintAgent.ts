@@ -97,7 +97,7 @@ export async function runLintAgent(prPayload: any) {
           );
           commentsPosted++;
         } catch (err: any) {
-          console.warn(`❌ Failed to comment on ${filePath}:${message.line}`, err.message);
+          console.warn(` Failed to comment on ${filePath}:${message.line}`, err.message);
         }
       }
     }
@@ -105,13 +105,13 @@ export async function runLintAgent(prPayload: any) {
     if (commentsPosted === 0) {
       await axios.post(
         `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`,
-        { body: '✅ Lint completed, but no inline comments were necessary.' },
+        { body: 'Lint completed, but no inline comments were necessary.' },
         { headers }
       );
     }
 
-    console.log('✅ Lint Agent finished.');
+    console.log('Lint Agent finished.');
   } catch (error: any) {
-    console.error('❌ Lint Agent error:', error.message);
+    console.error('Lint Agent error:', error.message);
   }
 }
