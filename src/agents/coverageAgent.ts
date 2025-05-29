@@ -25,15 +25,15 @@ export async function runCoverageAgent(prPayload: any) {
     };
 
     const coveragePath = path.resolve(__dirname, '../../coverage/coverage-summary.json');
-    console.log('📄 Reading coverage from:', coveragePath);
+    console.log(' Reading coverage from:', coveragePath);
 
     const coverageRaw = fs.readFileSync(coveragePath, 'utf-8');
     const coverage = JSON.parse(coverageRaw);
     const total = coverage.total;
 
-    console.log('📊 Parsed Coverage:', total);
+    console.log(' Parsed Coverage:', total);
 
-    // 🗄️ Store coverage in Postgres
+    //  Store coverage in Postgres
     await pool.query(
         `INSERT INTO coverage_history (
            pr_number, branch,
@@ -67,7 +67,7 @@ export async function runCoverageAgent(prPayload: any) {
       );
       
     
-    console.log('✅ Coverage stored in PostgreSQL');
+    console.log(' Coverage stored in PostgreSQL');
     
     const formatPercent = (value: unknown) => {
       const num = typeof value === 'number' ? value : 0;
@@ -75,7 +75,7 @@ export async function runCoverageAgent(prPayload: any) {
     };
     
     const message = `
-    📊 **Test Coverage Report**
+     **Test Coverage Report**
     - **Lines:** ${formatPercent(total.lines.pct)}
     - **Statements:** ${formatPercent(total.statements.pct)}
     - **Functions:** ${formatPercent(total.functions.pct)}
@@ -83,10 +83,10 @@ export async function runCoverageAgent(prPayload: any) {
     `;
     
 
-    console.log('🧠 Comment message prepared:\n', message);
+    console.log(' Comment message prepared:\n', message);
 
     const commentUrl = `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`;
-    console.log('📤 Posting coverage comment to:', commentUrl);
+    console.log(' Posting coverage comment to:', commentUrl);
 
     const response = await axios.post(
       commentUrl,
@@ -94,9 +94,9 @@ export async function runCoverageAgent(prPayload: any) {
       { headers }
     );
 
-    console.log('✅ Coverage comment posted. ID:', response.data.id);
+    console.log(' Coverage comment posted. ID:', response.data.id);
   } catch (error: any) {
-    console.error('❌ Coverage Agent failed.');
+    console.error(' Coverage Agent failed.');
     if (error.response) {
       console.error('Status:', error.response.status);
       console.error('URL:', error.config?.url);
