@@ -3,7 +3,7 @@ import { runCodeReviewAgent } from '../src/agents/codeReviewAgent';
 
 
 const fakePayload = {
-  number: 22, // 🔁 Replace with your actual PR number
+  number: 22, // Replace with your actual PR number
   base: {
     repo: {
       name: 'AgentPR',
