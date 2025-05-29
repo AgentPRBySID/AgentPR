@@ -29,10 +29,10 @@ export const postPRLabel = async (
       }
     );
 
-    console.log(`✅ Label "${label}" added to PR #${prNumber}`);
+    console.log(` Label "${label}" added to PR #${prNumber}`);
     return response.data;
   } catch (error: any) {
-    console.error('❌ Failed to add label');
+    console.error('Failed to add label');
     if (error.response) {
       console.error('Status:', error.response.status);
       console.error('Headers:', error.response.headers);
