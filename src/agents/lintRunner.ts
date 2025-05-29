@@ -7,7 +7,7 @@ export async function lintRunner(prPayload: any) {
   const outputPath = path.resolve(__dirname, '../../eslint-output.json');
 
   try {
-    console.log('🚀 Running ESLint...');
+    console.log(' Running ESLint...');
     execSync(`eslint . --ext .ts --format json -o ${outputPath}`, {
       stdio: 'inherit',
     });
@@ -17,10 +17,10 @@ export async function lintRunner(prPayload: any) {
       throw new Error('ESLint output not found or empty.');
     }
 
-    console.log('📄 ESLint finished. Handing over to Lint Agent...');
+    console.log(' ESLint finished. Handing over to Lint Agent...');
     await runLintAgent(prPayload);
 
   } catch (error: any) {
-    console.error('❌ lintRunner failed:', error.message);
+    console.error(' lintRunner failed:', error.message);
   }
 }
