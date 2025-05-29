@@ -14,7 +14,7 @@ export async function runTriageAgent(payload: any) {
   const risk = classifyRiskLevel(`${prTitle} ${prBody}`);
   await postPRLabel(owner, repo, prNumber, risk);
 
-  console.log(`✅ Applied label: ${risk}`);
+  console.log(` Applied label: ${risk}`);
   const test: any=         64;
 
 }
