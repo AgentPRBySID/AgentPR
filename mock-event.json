@@ -1,0 +1,19 @@
+{
+    "action": "opened",
+    "number": 42,
+    "pull_request": {
+      "number": 42,
+      "head": {
+        "ref": "feature/some-feature"
+      },
+      "base": {
+        "repo": {
+          "name": "AgentPR",
+          "owner": {
+            "login": "sreebhargav"
+          }
+        }
+      }
+    }
+  }
+  
