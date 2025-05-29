@@ -13,16 +13,16 @@ export async function runSecurityScanAgent(prPayload: any) {
     const owner = prPayload.base.repo.owner.login;
     const repo = prPayload.base.repo.name;
 
-    console.log('🔐 Running Semgrep scan...');
+    console.log(' Running Semgrep scan...');
 
     const outputPath = path.resolve(__dirname, '../../semgrep-output.json');
     try {
         execSync(`semgrep --config p/owasp-top-ten --json > ${outputPath}`, { stdio: 'inherit' });
       }  catch (e) {
         if (e instanceof Error) {
-          console.error('❌ Semgrep execution failed:', e.message);
+          console.error(' Semgrep execution failed:', e.message);
         } else {
-          console.error('❌ Semgrep execution failed with unknown error:', e);
+          console.error('Semgrep execution failed with unknown error:', e);
         }
         return;
       }
@@ -33,10 +33,10 @@ export async function runSecurityScanAgent(prPayload: any) {
     const report = JSON.parse(raw);
 
     if (report.results.length === 0) {
-        console.log('✅ No security issues found. (Posting dummy comment for test)');
+        console.log(' No security issues found. (Posting dummy comment for test)');
         const commentUrl = `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`;
         await axios.post(commentUrl, {
-          body: `🔐 **Semgrep Security Scan**\n\n✅ No issues found.`,
+          body: ` **Semgrep Security Scan**\n\n No issues found.`,
         }, {
           headers: {
             Authorization: `token ${token}`,
@@ -51,15 +51,15 @@ export async function runSecurityScanAgent(prPayload: any) {
       .map((r: any) => `- [${r.check_id}] ${r.path}:${r.start.line} → ${r.message}`)
       .join('\n');
 
-    const body = `🔐 **Semgrep Security Scan Results**\n\n${issues}`;
+    const body = ` **Semgrep Security Scan Results**\n\n${issues}`;
 
     const commentUrl = `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`;
     await axios.post(commentUrl, { body }, {
       headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github+json' },
     });
 
-    console.log('✅ Semgrep scan results posted to PR.');
+    console.log(' Semgrep scan results posted to PR.');
   } catch (err: any) {
-    console.error('❌ Security Scan Agent failed.', err.message);
+    console.error(' Security Scan Agent failed.', err.message);
   }
 }
